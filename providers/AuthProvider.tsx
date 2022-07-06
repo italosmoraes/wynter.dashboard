@@ -1,17 +1,23 @@
 import React, { ReactNode, useContext, useEffect, useState } from 'react'
-import { initializeApp } from 'firebase/app'
-import { GoogleAuthProvider, signInWithPopup, Auth, getAuth } from 'firebase/auth'
+import { initializeApp, getApps, getApp } from 'firebase/app'
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  Auth,
+  getAuth,
+  initializeAuth,
+  browserSessionPersistence,
+  browserPopupRedirectResolver
+} from 'firebase/auth'
 
 const googleAuthProvider = new GoogleAuthProvider()
 
 const googleAuthConfig = {
   apiKey: 'AIzaSyDMEfTUjYjcP-_z1SM3Euo6GGTdnHRwM9c',
-  authDomain: 'wynter-dashboard.firebaseapp.com'
+  authDomain: 'http://localhost:3000'
 }
 
-const firebaseApp = initializeApp(googleAuthConfig)
-
-const authInstance = getAuth(firebaseApp)
+const firebaseApp = !getApps().length ? initializeApp(googleAuthConfig) : getApp() // this check prevents error on hot reloading
 
 export interface AuthContextType {
   username?: string
@@ -29,13 +35,25 @@ const AuthContext = React.createContext({} as AuthContextType)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const username = 'username!'
 
+  let authInstance
+
   useEffect(() => {
-    login()
+    try {
+      authInstance = getAuth(firebaseApp)
+      // authInstance = initializeAuth(firebaseApp, {
+      //   persistence: browserSessionPersistence,
+      //   popupRedirectResolver: browserPopupRedirectResolver
+      // })
+
+      login()
+    } catch (err) {
+      console.log('--- Firebase init error: ', err)
+    }
   }, [])
 
   const login = () => {
     // use google as auth provider
-    signInWithPopup(authInstance, googleAuthProvider)
+    signInWithPopup(authInstance, googleAuthProvider, browserPopupRedirectResolver)
       .then(function (result) {
         console.log('---- signed in user: ', result.user)
         console.log('--- credential', GoogleAuthProvider.credentialFromResult(result))

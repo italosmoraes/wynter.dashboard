@@ -1,5 +1,4 @@
-import useAuth, { AuthProvider } from '../providers/AuthProvider'
-import { useEffect } from 'react'
+import { AuthProvider } from '../providers/AuthProvider'
 import '../styles/globals.css'
 
 function NextjsWrapper({ Component, pageProps }) {
